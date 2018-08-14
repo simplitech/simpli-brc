@@ -5,14 +5,15 @@ from boa.builtins import concat
 
 from simpli.token import *
 
-
 OnTransfer = RegisterAction('transfer', 'addr_from', 'addr_to', 'amount')
 OnApprove = RegisterAction('approve', 'addr_from', 'addr_to', 'amount')
 
 
 def handle_nep51(ctx, operation, args):
+    if operation == 'newWallet':
+        return newWallet(ctx, args[0], args[1])
 
-    if operation == 'name':
+    elif operation == 'name':
         return TOKEN_NAME
 
     elif operation == 'decimals':
@@ -47,8 +48,19 @@ def handle_nep51(ctx, operation, args):
     return False
 
 
-def do_transfer(ctx, t_from, t_to, amount):
+def newWallet(ctx, nickname, walletAddress):
+    existingWallet = Get(ctx, nickname)
+    if existingWallet is not None:
+        return False
 
+    do_transfer(ctx, "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y", walletAddress, 100)
+
+    Put(ctx, nickname, walletAddress)
+
+    return True
+
+
+def do_transfer(ctx, t_from, t_to, amount):
     if amount <= 0:
         return False
 
@@ -90,7 +102,6 @@ def do_transfer(ctx, t_from, t_to, amount):
 
 
 def do_transfer_from(ctx, t_from, t_to, amount):
-
     if amount <= 0:
         return False
 
@@ -137,7 +148,6 @@ def do_transfer_from(ctx, t_from, t_to, amount):
 
 
 def do_approve(ctx, t_owner, t_spender, amount):
-
     if len(t_spender) != 20:
         return False
 
@@ -166,5 +176,4 @@ def do_approve(ctx, t_owner, t_spender, amount):
 
 
 def do_allowance(ctx, t_owner, t_spender):
-
     return Get(ctx, concat(t_owner, t_spender))
